@@ -3,10 +3,12 @@ import base64
 import time
 import re
 import html
+import json
 
 from pathlib import Path
 from PIL import Image, ImageOps
 from search_engine import sistemi_yukle, tarif_ara
+from rag_search import rag_aciklama
 
 
 # SAYFA AYARLARI
@@ -38,6 +40,9 @@ if "alisveris" not in st.session_state:
 
 if "sonuclar" not in st.session_state:
     st.session_state.sonuclar = []
+
+if "rag_cevaplari" not in st.session_state:
+    st.session_state.rag_cevaplari = {}
 
 
 # ANA SAYFA FOTOGRAFI
@@ -282,6 +287,29 @@ h1, h2, h3, h4 {
     color: #8C4928;
 }
 
+.ai-box {
+    background: #E8EFE5;
+    border: 1px solid #D0DECA;
+    border-radius: 15px;
+    padding: 18px;
+    margin-top: 10px;
+}
+
+.ai-title {
+    font-family: Georgia, serif;
+    color: #243D30;
+    font-size: 19px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.ai-text {
+    color: #38583F;
+    font-size: 14px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+}
+
 .feature {
     background: white;
     border: 1px solid #E5E7DE;
@@ -370,7 +398,7 @@ def kategori_fotografi(kategori):
     return BASE / "assets" / "recipes" / dosya
 
 
-# FOTOGRAFLARI ESIT BOYUTLANDIRMA
+# FOTOGRAFLARI BOYUTLANDIRMA
 
 @st.cache_data
 def fotograf_hazirla(dosya):
@@ -465,12 +493,110 @@ def sure_hesapla(deger):
     return None
 
 
+# YAPAY ZEKA ASISTANI
+
+def yapay_zeka_asistani(sonuc, alan):
+
+    tarif_id = sonuc["id"]
+
+    tercih = sonuc.get(
+        "kullanici_tercihi",
+        "Bu yemek hakkında açıklama"
+    )
+
+    rag_anahtari = json.dumps(
+        [
+            tarif_id,
+            tercih,
+            sonuc["mevcut"],
+            sonuc["eksik"]
+        ],
+        ensure_ascii=False,
+        sort_keys=True
+    )
+
+    if st.button(
+
+        "✨ Yapay Zekâ Asistanına Sor",
+
+        key=f"{alan}_rag_{tarif_id}",
+
+        use_container_width=True
+
+    ):
+
+        with st.spinner(
+            "Yapay zekâ açıklama hazırlıyor..."
+        ):
+
+            try:
+
+                cevap = rag_aciklama(
+                    sonuc,
+                    tercih
+                )
+
+                if cevap:
+
+                    st.session_state.rag_cevaplari[
+                        rag_anahtari
+                    ] = cevap
+
+                else:
+
+                    st.warning(
+                        "Model açıklama üretemedi."
+                    )
+
+            except Exception as hata:
+
+                st.error(
+                    f"Yapay zekâ hatası: {hata}"
+                )
+
+    if rag_anahtari in st.session_state.rag_cevaplari:
+
+        cevap = st.session_state.rag_cevaplari[
+            rag_anahtari
+        ]
+
+        guvenli_cevap = html.escape(
+            str(cevap)
+        )
+
+        st.html(f"""
+        <div class="ai-box">
+
+        <div class="ai-title">
+        ✨ RecipeMind AI Asistanı
+        </div>
+
+        <div class="ai-text">
+        {guvenli_cevap}
+        </div>
+
+        </div>
+        """)
+
+        st.caption(
+            "Qwen 2.5 · RAG destekli açıklama"
+        )
+
+        st.caption(
+            "Bu açıklama yapay zekâ tarafından "
+            "üretilmiştir ve hata içerebilir. "
+            "Tarif bilgilerini esas alınız."
+        )
+
+
 # TARIF KARTLARI
 
 def tarif_karti(sonuc, alan):
 
     tarif = sonuc["tarif"]
+
     tarif_id = sonuc["id"]
+
     uyum = sonuc["uyum"]
 
     kategori = str(
@@ -627,6 +753,8 @@ def tarif_karti(sonuc, alan):
 
             st.rerun()
 
+        # TARIF DETAYLARI
+
         with st.expander("Tarifi İncele"):
 
             st.markdown(
@@ -708,7 +836,8 @@ def tarif_karti(sonuc, alan):
             if isinstance(adimlar, list):
 
                 for no, adim in enumerate(
-                    adimlar, start=1
+                    adimlar,
+                    start=1
                 ):
 
                     st.write(f"{no}. {adim}")
@@ -741,13 +870,22 @@ def tarif_karti(sonuc, alan):
                 f"{sonuc['puan']:.3f}"
             )
 
+        # RAG ENTEGRASYONU
+
+        yapay_zeka_asistani(
+            sonuc,
+            alan
+        )
+
 
 # KARTLARI YAN YANA GOSTER
 
 def kartlari_goster(sonuclar, alan):
 
     for baslangic in range(
-        0, len(sonuclar), 3
+        0,
+        len(sonuclar),
+        3
     ):
 
         kolonlar = st.columns(3)
@@ -758,7 +896,10 @@ def kartlari_goster(sonuclar, alan):
 
             with kolonlar[j]:
 
-                tarif_karti(sonuc, alan)
+                tarif_karti(
+                    sonuc,
+                    alan
+                )
 
 
 # LOGO
@@ -969,6 +1110,12 @@ with kesfet:
                             key=lambda s: len(s["eksik"])
                         )
 
+                    # KULLANICI TERCIHINI RAG ICIN SAKLA
+
+                    for sonuc in sonuclar:
+
+                        sonuc["kullanici_tercihi"] = tercih
+
                     st.session_state.sonuclar = sonuclar[:6]
 
                     st.session_state.arama_suresi = (
@@ -1058,10 +1205,11 @@ with kesfet:
         st.html("""
         <div class="feature">
         <div class="feature-icon">✨</div>
-        <h3>Akıllı Teknoloji</h3>
+        <h3>Yapay Zekâ Asistanı</h3>
         <p>
-        Anlamsal arama ve hibrit bilgi erişimi
-        ile yeni lezzetler keşfet.
+        RAG destekli kişiselleştirilmiş
+        tarif açıklamalarıyla yeni
+        lezzetler keşfet.
         </p>
         </div>
         """)
@@ -1204,6 +1352,16 @@ with analiz:
         },
 
         {
+            "Teknoloji": "Qwen 2.5 - 1.5B Instruct",
+            "Görevi": "Yapay zekâ açıklaması üretme"
+        },
+
+        {
+            "Teknoloji": "RAG",
+            "Görevi": "Getirilen tariflere dayalı açıklama"
+        },
+
+        {
             "Teknoloji": "Streamlit",
             "Görevi": "Web arayüzü"
         }
@@ -1229,6 +1387,15 @@ Hibrit Puanlama
         |
         v
 Kişiselleştirilmiş Tarif Önerileri
+        |
+        v
+Kullanıcı Tarif Seçimi
+        |
+        v
+RAG + Qwen 2.5
+        |
+        v
+Yapay Zekâ Destekli Tarif Açıklaması
     """, language="text")
 
     st.header("Hibrit Arama Ağırlıkları")
@@ -1258,6 +1425,32 @@ Kişiselleştirilmiş Tarif Önerileri
 
             f"{st.session_state.arama_suresi:.3f} saniye"
         )
+
+    st.header("RAG Yapay Zekâ Asistanı")
+
+    st.write(
+        "Sistem, hibrit arama sonucunda getirilen "
+        "tarif bilgilerini Qwen 2.5 modeline "
+        "bağlam olarak aktarır. Model, tarifin "
+        "kullanıcıya neden önerildiğini açıklamaya çalışır."
+    )
+
+    c1, c2 = st.columns(2)
+
+    c1.metric(
+        "Dil Modeli",
+        "Qwen 2.5"
+    )
+
+    c2.metric(
+        "Üretilen Kayıtlı Açıklama",
+        len(st.session_state.rag_cevaplari)
+    )
+
+    st.caption(
+        "Model yerel olarak çalışır. "
+        "Üretilen yanıtların doğruluğu garanti edilmez."
+    )
 
     if st.button("Veri Seti Bilgilerini Göster"):
 

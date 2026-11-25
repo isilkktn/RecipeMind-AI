@@ -1,3 +1,5 @@
+import os
+import torch
 import json
 from sentence_transformers import SentenceTransformer, util
 
@@ -27,11 +29,18 @@ for tarif in tarifler:
 
 print("Tarifler analiz ediliyor...")
 
-vektorler = model.encode(
-    metinler,
-    convert_to_tensor=True,
-    show_progress_bar=True
-)
+if os.path.exists("data/vektorler.pt"):
+    vektorler = torch.load("data/vektorler.pt")
+    print("Kayitli vektorler yuklendi!")
+else:
+    vektorler = model.encode(
+        metinler,
+        convert_to_tensor=True,
+        show_progress_bar=True
+    )
+
+    torch.save(vektorler.cpu(), "data/vektorler.pt")
+    print("Vektorler basariyla kaydedildi!")
 
 sorgu = input("Nasil bir yemek yapmak istiyorsunuz? ")
 

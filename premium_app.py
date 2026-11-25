@@ -1,5 +1,8 @@
 import streamlit as st
 import base64
+import time
+import re
+import html
 from pathlib import Path
 
 from search_engine import sistemi_yukle, tarif_ara
@@ -24,7 +27,19 @@ def motoru_yukle():
     return sistemi_yukle()
 
 
-# ANA SAYFA FOTOGRAFI
+# OTURUM BILGILERI
+
+if "favoriler" not in st.session_state:
+    st.session_state.favoriler = {}
+
+if "alisveris" not in st.session_state:
+    st.session_state.alisveris = []
+
+if "sonuclar" not in st.session_state:
+    st.session_state.sonuclar = []
+
+
+# FOTOGRAF
 
 foto = BASE / "assets" / "hero.jpg"
 
@@ -34,24 +49,23 @@ with open(foto, "rb") as dosya:
     ).decode()
 
 
-# TASARIM AYARLARI
+# TASARIM
 
 st.html("""
 <style>
 
 .stApp {
-    background-color: #FAF8F3;
+    background: #FAF8F3;
     color: #283C30;
 }
 
 [data-testid="stHeader"] {
-    background-color: #FAF8F3;
+    background: #FAF8F3;
 }
 
 .block-container {
     max-width: 1300px;
     padding-top: 3rem;
-    padding-bottom: 2rem;
 }
 
 h1, h2, h3, h4 {
@@ -61,19 +75,34 @@ h1, h2, h3, h4 {
 
 .brand {
     font-family: Georgia, serif;
-    font-size: 32px;
+    font-size: 34px;
     font-weight: bold;
     color: #243D30;
 }
 
 .brand span {
-    color: #C17A50;
+    color: #B8754D;
 }
 
 .tagline {
     color: #68776B;
-    font-size: 13px;
+    font-size: 12px;
     letter-spacing: 2px;
+}
+
+[data-testid="stTabs"] [role="tablist"] {
+    gap: 15px;
+    border-bottom: 1px solid #DCE2D6;
+}
+
+[data-testid="stTabs"] button {
+    padding: 12px 20px;
+}
+
+[data-testid="stTabs"] button p {
+    font-size: 15px;
+    font-weight: 600;
+    color: #38583F;
 }
 
 .hero {
@@ -82,7 +111,7 @@ h1, h2, h3, h4 {
     background: #EEEDE3;
     border-radius: 28px;
     overflow: hidden;
-    min-height: 360px;
+    min-height: 340px;
     margin-top: 20px;
     margin-bottom: 25px;
 }
@@ -108,13 +137,13 @@ h1, h2, h3, h4 {
 
 .hero-image {
     width: 48%;
-    min-height: 360px;
+    min-height: 340px;
     background-size: cover;
     background-position: center;
     align-self: stretch;
 }
 
-.badge {
+.eyebrow {
     display: inline-block;
     background: #DCE5D5;
     color: #38583F;
@@ -137,15 +166,11 @@ h1, h2, h3, h4 {
     padding: 14px;
 }
 
-[data-baseweb="input"] {
+[data-baseweb="input"],
+[data-baseweb="select"] > div {
     background: white !important;
-    border-radius: 12px;
-    border-color: #D6DCCF;
-}
-
-[data-testid="stWidgetLabel"] p {
     color: #243D30 !important;
-    font-weight: 600;
+    border-radius: 12px;
 }
 
 .stFormSubmitButton > button {
@@ -155,16 +180,30 @@ h1, h2, h3, h4 {
     border-radius: 12px;
     min-height: 48px;
     font-weight: 600;
-    transition: all 0.2s ease;
 }
 
 .stFormSubmitButton > button:hover {
-    background: #C17A50 !important;
+    background: #B8754D !important;
+}
+
+.stButton > button,
+.stDownloadButton > button {
+    border-radius: 10px;
+    border: 1px solid #DCE2D6;
+    background: #FFFFFF;
+    color: #38583F;
+}
+
+.stButton > button:hover {
+    border-color: #38583F;
+    color: #38583F;
+    background: #E8EFE5;
 }
 
 [data-testid="stVerticalBlockBorderWrapper"] {
     background: white;
     border-radius: 18px;
+    box-shadow: 0 5px 18px #243D3009;
 }
 
 [data-testid="stExpander"] {
@@ -172,8 +211,71 @@ h1, h2, h3, h4 {
     border-radius: 10px;
 }
 
-[data-testid="stProgress"] > div > div > div {
-    background-color: #66885E;
+.recipe-banner {
+    border-radius: 16px;
+    padding: 25px;
+    background: linear-gradient(
+        135deg, #DCE5D5, #F0EBDD
+    );
+    min-height: 110px;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.recipe-icon {
+    font-size: 50px;
+}
+
+.recipe-category {
+    color: #38583F;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.recipe-title {
+    font-family: Georgia, serif;
+    color: #243D30;
+    font-size: 23px;
+    font-weight: bold;
+    min-height: 64px;
+}
+
+.match-label {
+    font-size: 13px;
+    color: #526457;
+    margin-top: 8px;
+}
+
+.match-value {
+    font-family: Georgia, serif;
+    font-size: 34px;
+    font-weight: bold;
+}
+
+.match-track {
+    background: #E7EAE2;
+    height: 9px;
+    border-radius: 15px;
+    overflow: hidden;
+    margin: 10px 0;
+}
+
+.ingredient-tag {
+    display: inline-block;
+    border-radius: 20px;
+    font-size: 12px;
+    padding: 6px 10px;
+    margin: 3px;
+}
+
+.available {
+    background: #E1EDDF;
+    color: #345B39;
+}
+
+.missing {
+    background: #F6E4D6;
+    color: #8C4928;
 }
 
 .feature {
@@ -181,14 +283,8 @@ h1, h2, h3, h4 {
     border: 1px solid #E5E7DE;
     border-radius: 18px;
     padding: 24px;
-    min-height: 190px;
+    min-height: 180px;
     box-shadow: 0 6px 18px #243D3008;
-    transition: all 0.2s ease;
-}
-
-.feature:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 25px #243D3015;
 }
 
 .feature h3 {
@@ -202,7 +298,6 @@ h1, h2, h3, h4 {
 
 .feature-icon {
     font-size: 32px;
-    margin-bottom: 12px;
 }
 
 .footer {
@@ -236,6 +331,337 @@ h1, h2, h3, h4 {
 """)
 
 
+# KATEGORI SIMGELERI
+
+def kategori_simgesi(kategori):
+
+    kategori = str(kategori).lower()
+
+    if "kahvalt" in kategori:
+        return "🍳"
+
+    if "tatlı" in kategori:
+        return "🍰"
+
+    if "çorba" in kategori:
+        return "🥣"
+
+    if "salata" in kategori:
+        return "🥗"
+
+    if "makarna" in kategori:
+        return "🍝"
+
+    if "et" in kategori:
+        return "🍖"
+
+    if "börek" in kategori:
+        return "🥐"
+
+    if "içecek" in kategori:
+        return "🥤"
+
+    return "🍽️"
+
+
+# SURE HESAPLAMA
+
+def sure_hesapla(deger):
+
+    if isinstance(deger, (int, float)):
+        return int(deger) if deger >= 0 else None
+
+    metin = str(deger or "").strip().upper()
+
+    if metin.isdigit():
+        return int(metin)
+
+    iso = re.fullmatch(
+        r"PT(?:(\d+)H)?(?:(\d+)M)?",
+        metin
+    )
+
+    if iso:
+
+        saat = int(iso.group(1) or 0)
+        dakika = int(iso.group(2) or 0)
+
+        return saat * 60 + dakika
+
+    saat = re.search(
+        r"(\d+)\s*SAAT",
+        metin
+    )
+
+    dakika = re.search(
+        r"(\d+)\s*(DK|DAKİKA|DAKIKA)",
+        metin
+    )
+
+    if saat or dakika:
+
+        return (
+            int(saat.group(1)) * 60 if saat else 0
+        ) + (
+            int(dakika.group(1)) if dakika else 0
+        )
+
+    return None
+
+
+# TARIF KARTLARI
+
+def tarif_karti(sonuc, alan):
+
+    tarif = sonuc["tarif"]
+    tarif_id = sonuc["id"]
+    uyum = sonuc["uyum"]
+
+    kategori = str(
+        tarif.get("category") or "Yemek Tarifi"
+    )
+
+    baslik = html.escape(
+        str(tarif.get("title") or "Yemek Tarifi")
+    )
+
+    simge = kategori_simgesi(kategori)
+
+    yuzde = round(uyum * 100)
+
+    if yuzde >= 75:
+        renk = "#527A46"
+
+    elif yuzde >= 40:
+        renk = "#B8754D"
+
+    else:
+        renk = "#B4554A"
+
+    with st.container(border=True):
+
+        st.html(f"""
+        <div class="recipe-banner">
+        <div class="recipe-icon">{simge}</div>
+        <div class="recipe-category">
+        {html.escape(kategori)}
+        </div>
+        </div>
+        """)
+
+        st.html(f"""
+        <div class="recipe-title">{baslik}</div>
+        """)
+
+        sure = sure_hesapla(
+            tarif.get("prep_time")
+        )
+
+        if sure is not None:
+
+            st.caption(
+                f"⏱️ Hazırlama: {sure} dakika"
+            )
+
+        else:
+
+            st.caption(
+                "⏱️ Hazırlama süresi belirtilmemiş"
+            )
+
+        st.html(f"""
+        <div class="match-label">
+        MALZEME UYUMU
+        </div>
+
+        <div class="match-value"
+        style="color:{renk}">
+        %{yuzde}
+        </div>
+
+        <div class="match-track">
+        <div style="width:{yuzde}%;
+        background:{renk};
+        height:9px;">
+        </div>
+        </div>
+        """)
+
+        st.write(
+            f"✅ {len(sonuc['mevcut'])} eşleşen malzeme"
+        )
+
+        st.write(
+            f"🛒 {len(sonuc['eksik'])} eksik malzeme"
+        )
+
+        if yuzde == 100:
+
+            st.success(
+                "Tüm malzeme isimleri eşleşti!"
+            )
+
+        favori = (
+            tarif_id in st.session_state.favoriler
+        )
+
+        if st.button(
+
+            "❤️ Favoriden Çıkar"
+            if favori
+            else "🤍 Favorilere Ekle",
+
+            key=f"{alan}_favori_{tarif_id}",
+            use_container_width=True
+
+        ):
+
+            if favori:
+
+                del st.session_state.favoriler[
+                    tarif_id
+                ]
+
+            else:
+
+                st.session_state.favoriler[
+                    tarif_id
+                ] = sonuc
+
+            st.rerun()
+
+        with st.expander("Tarifi İncele"):
+
+            st.markdown(
+                "**Mutfağında Bulunanlar**"
+            )
+
+            if sonuc["mevcut"]:
+
+                etiketler = "".join(
+
+                    '<span class="ingredient-tag available">'
+                    + html.escape(str(m))
+                    + '</span>'
+
+                    for m in sonuc["mevcut"]
+                )
+
+                st.html(etiketler)
+
+            else:
+
+                st.write(
+                    "Eşleşen malzeme bulunamadı."
+                )
+
+            st.markdown(
+                "**Eksik Malzemeler**"
+            )
+
+            if sonuc["eksik"]:
+
+                etiketler = "".join(
+
+                    '<span class="ingredient-tag missing">'
+                    + html.escape(str(m))
+                    + '</span>'
+
+                    for m in sonuc["eksik"]
+                )
+
+                st.html(etiketler)
+
+                if st.button(
+
+                    "🛒 Alışveriş Listesine Ekle",
+
+                    key=f"{alan}_liste_{tarif_id}",
+
+                    use_container_width=True
+
+                ):
+
+                    for m in sonuc["eksik"]:
+
+                        if m not in st.session_state.alisveris:
+
+                            st.session_state.alisveris.append(m)
+
+                    st.rerun()
+
+            else:
+
+                st.write(
+                    "Eksik malzeme bulunamadı."
+                )
+
+            st.markdown("**Tüm Malzemeler**")
+
+            for m in tarif.get("ingredients") or []:
+
+                st.write("• " + str(m))
+
+            st.markdown("**Hazırlanışı**")
+
+            adimlar = tarif.get(
+                "instructions"
+            ) or []
+
+            if isinstance(adimlar, list):
+
+                for no, adim in enumerate(
+                    adimlar, start=1
+                ):
+
+                    st.write(f"{no}. {adim}")
+
+            elif adimlar:
+
+                st.write(adimlar)
+
+            else:
+
+                st.info(
+                    "Hazırlanış bilgisi bulunamadı."
+                )
+
+            st.markdown("**Neden Bu Tarif?**")
+
+            st.write(
+                f"Bu tarif, yemek tercihin ve "
+                f"malzeme eşleşmen dikkate alınarak "
+                f"önerildi. Malzeme isimlerinin "
+                f"%{yuzde} kadarı eşleşiyor."
+            )
+
+            st.caption(
+                "Kural tabanlı öneri açıklaması."
+            )
+
+            st.caption(
+                f"Hibrit arama puanı: "
+                f"{sonuc['puan']:.3f}"
+            )
+
+
+# KARTLARI YAN YANA GOSTER
+
+def kartlari_goster(sonuclar, alan):
+
+    for baslangic in range(0, len(sonuclar), 3):
+
+        kolonlar = st.columns(3)
+
+        for j, sonuc in enumerate(
+            sonuclar[baslangic:baslangic + 3]
+        ):
+
+            with kolonlar[j]:
+
+                tarif_karti(sonuc, alan)
+
+
 # LOGO
 
 st.html("""
@@ -249,335 +675,523 @@ AKILLI MUTFAK • SÜRDÜRÜLEBİLİR YAŞAM
 """)
 
 
-# ANA SAYFA GORSELI
+# UST NAVIGASYON MENUSU
 
-st.html(f"""
-<div class="hero">
-<div class="hero-content">
+kesfet, favoriler, alisveris, analiz = st.tabs([
 
-<span class="badge">
-YAPAY ZEKÂ DESTEKLİ MUTFAK
-</span>
+    "🏠 Tarif Keşfet",
 
-<h1>Lezzet, mutfağında<br>başlar.</h1>
+    f"❤️ Favorilerim ({len(st.session_state.favoriler)})",
 
-<p>
-Elindeki malzemelerle harikalar yarat.
-Yapay zekâ ile sana özel tarifler keşfet,
-yeni lezzetler dene ve gıda israfını azalt.
-</p>
+    f"🛒 Alışveriş Listem ({len(st.session_state.alisveris)})",
 
-</div>
+    "📊 Sistem Analizi"
 
-<div class="hero-image"
-style="background-image: url('data:image/jpeg;base64,{gorsel}');">
-</div>
-
-</div>
-""")
+])
 
 
-# ARAMA PANELI
+# TARIF KESFET SAYFASI
 
-st.html("""
-<div class="section-title">
-Bugün ne pişiriyoruz?
-</div>
-""")
+with kesfet:
 
-st.caption(
-    "Mutfağındaki malzemeleri söyle, "
-    "sana uygun lezzetleri keşfedelim."
-)
+    st.html(f"""
+    <div class="hero">
 
+    <div class="hero-content">
 
-with st.form("tarif_arama"):
+    <span class="eyebrow">
+    YAPAY ZEKÂ DESTEKLİ MUTFAK
+    </span>
 
-    sol, sag = st.columns(2)
+    <h1>Lezzet, mutfağında<br>başlar.</h1>
 
-    malzemeler = sol.text_input(
-        "🥑 Evindeki malzemeler",
-        placeholder="Domates, yumurta, peynir..."
+    <p>
+    Elindeki malzemelerle harikalar yarat.
+    Yapay zekâ ile sana özel tarifler keşfet,
+    yeni lezzetler dene ve gıda israfını azalt.
+    </p>
+
+    </div>
+
+    <div class="hero-image"
+    style="background-image:
+    url('data:image/jpeg;base64,{gorsel}');">
+    </div>
+
+    </div>
+    """)
+
+    st.html("""
+    <div class="section-title">
+    Bugün ne pişiriyoruz?
+    </div>
+    """)
+
+    st.caption(
+        "Mutfağındaki malzemeleri söyle, "
+        "sana uygun lezzetleri keşfedelim."
     )
 
-    tercih = sag.text_input(
-        "🍽️ Canın ne çekiyor?",
-        placeholder="Hafif ve pratik bir yemek..."
-    )
+    with st.form("tarif_arama"):
 
-    ara = st.form_submit_button(
-        "Tarifleri Keşfet →",
-        use_container_width=True
-    )
+        sol, sag = st.columns(2)
 
-
-# ARAMA ISLEMI
-
-if ara:
-
-    st.session_state["sonuclar"] = []
-
-    if not malzemeler.strip() or not tercih.strip():
-
-        st.warning(
-            "Lütfen iki alanı da doldur."
+        malzemeler = sol.text_input(
+            "🥑 Evindeki malzemeler",
+            placeholder="Domates, yumurta, peynir..."
         )
 
-    else:
+        tercih = sag.text_input(
+            "🍽️ Canın ne çekiyor?",
+            placeholder="Hafif ve pratik bir yemek..."
+        )
 
-        with st.spinner(
-            "Sana özel tarifler hazırlanıyor..."
-        ):
+        c1, c2, c3 = st.columns(3)
 
-            try:
+        kategori = c1.selectbox(
 
-                sistem = motoru_yukle()
+            "Yemek kategorisi",
 
-                sonuclar = tarif_ara(
-                    sistem,
-                    malzemeler,
-                    tercih,
-                    adet=6
-                )
+            [
+                "Tümü",
+                "Kahvaltı",
+                "Ana Yemek",
+                "Çorba",
+                "Salata",
+                "Tatlı",
+                "Börek",
+                "Makarna"
+            ]
+        )
 
-                st.session_state["sonuclar"] = sonuclar
+        sure_secimi = c2.selectbox(
 
-                if sonuclar:
+            "Hazırlama süresi",
 
-                    st.success(
-                        f"Senin için {len(sonuclar)} tarif bulundu!"
+            [
+                "Fark etmez",
+                "15 dakika",
+                "30 dakika",
+                "60 dakika"
+            ]
+        )
+
+        siralama = c3.selectbox(
+
+            "Sıralama",
+
+            [
+                "En uygun tarifler",
+                "En yüksek malzeme uyumu",
+                "En az eksik malzeme"
+            ]
+        )
+
+        ara = st.form_submit_button(
+            "Tarifleri Keşfet →",
+            use_container_width=True
+        )
+
+    if ara:
+
+        st.session_state.sonuclar = []
+
+        if not malzemeler.strip() or not tercih.strip():
+
+            st.warning(
+                "Lütfen iki alanı da doldur."
+            )
+
+        else:
+
+            with st.spinner(
+                "Sana özel tarifler hazırlanıyor..."
+            ):
+
+                try:
+
+                    sistem = motoru_yukle()
+
+                    baslangic = time.perf_counter()
+
+                    sonuclar = tarif_ara(
+                        sistem,
+                        malzemeler,
+                        tercih,
+                        adet=200
                     )
 
-                else:
+                    if kategori != "Tümü":
 
-                    st.warning(
-                        "Uygun tarif bulunamadı."
+                        kategori_anahtari = (
+                            kategori.lower()[:5]
+                        )
+
+                        sonuclar = [
+
+                            s for s in sonuclar
+
+                            if kategori_anahtari in str(
+                                s["tarif"].get("category") or ""
+                            ).lower()
+
+                        ]
+
+                    if sure_secimi != "Fark etmez":
+
+                        maksimum = int(
+                            sure_secimi.split()[0]
+                        )
+
+                        filtrelenen = []
+
+                        for s in sonuclar:
+
+                            sure = sure_hesapla(
+                                s["tarif"].get("prep_time")
+                            )
+
+                            if sure is not None and sure <= maksimum:
+
+                                filtrelenen.append(s)
+
+                        sonuclar = filtrelenen
+
+                    if siralama == "En yüksek malzeme uyumu":
+
+                        sonuclar.sort(
+                            key=lambda s: s["uyum"],
+                            reverse=True
+                        )
+
+                    elif siralama == "En az eksik malzeme":
+
+                        sonuclar.sort(
+                            key=lambda s: len(s["eksik"])
+                        )
+
+                    st.session_state.sonuclar = sonuclar[:6]
+
+                    st.session_state.arama_suresi = (
+                        time.perf_counter() - baslangic
                     )
 
-            except Exception as hata:
+                    if not sonuclar:
 
-                st.error(
-                    f"Arama sırasında hata oluştu: {hata}"
-                )
+                        st.info(
+                            "Arama sonuçlarında filtrelerine "
+                            "uygun tarif bulunamadı."
+                        )
 
-                st.exception(hata)
+                except Exception as hata:
 
+                    st.error(
+                        f"Arama hatası: {hata}"
+                    )
 
-# TARIF SONUCLARI
+                    st.exception(hata)
 
-if st.session_state.get("sonuclar"):
+    if st.session_state.sonuclar:
+
+        st.divider()
+
+        st.html("""
+        <div class="section-title">
+        Sana özel lezzetler
+        </div>
+        """)
+
+        st.caption(
+            f"{len(st.session_state.sonuclar)} tarif "
+            f"• Arama süresi: "
+            f"{st.session_state.get('arama_suresi', 0):.3f} saniye"
+        )
+
+        kartlari_goster(
+            st.session_state.sonuclar,
+            "arama"
+        )
+
+        st.caption(
+            "Malzeme uyumu isim eşleşmesine dayanır. "
+            "Malzeme miktarları kontrol edilmez."
+        )
 
     st.divider()
 
     st.html("""
     <div class="section-title">
-    Sana özel lezzetler
+    Akıllı mutfağın avantajları
     </div>
     """)
 
-    st.caption(
-        "Mutfağındaki malzemelere ve tercihlerine "
-        "göre seçilen tarifler."
+    c1, c2, c3 = st.columns(3)
+
+    with c1:
+
+        st.html("""
+        <div class="feature">
+        <div class="feature-icon">🥗</div>
+        <h3>Sana Özel Tarifler</h3>
+        <p>
+        Malzemelerine ve yemek tercihlerine
+        uygun akıllı öneriler.
+        </p>
+        </div>
+        """)
+
+    with c2:
+
+        st.html("""
+        <div class="feature">
+        <div class="feature-icon">🌱</div>
+        <h3>Daha Az İsraf</h3>
+        <p>
+        Evindeki malzemeleri değerlendir,
+        sürdürülebilir bir mutfak oluştur.
+        </p>
+        </div>
+        """)
+
+    with c3:
+
+        st.html("""
+        <div class="feature">
+        <div class="feature-icon">✨</div>
+        <h3>Akıllı Teknoloji</h3>
+        <p>
+        Anlamsal arama ve hibrit bilgi erişimi
+        ile yeni lezzetler keşfet.
+        </p>
+        </div>
+        """)
+
+
+# FAVORILER SAYFASI
+
+with favoriler:
+
+    st.title("Sevdiğin lezzetler")
+
+    st.write(
+        "Favori tariflerinin tamamı bir arada."
     )
 
-    sonuclar = st.session_state["sonuclar"]
+    if not st.session_state.favoriler:
 
-    for baslangic in range(0, len(sonuclar), 3):
+        st.info(
+            "Henüz favori tarifin yok. "
+            "Tarif kartlarındaki kalp butonuna bas."
+        )
 
-        kolonlar = st.columns(3)
+    else:
 
-        for j, sonuc in enumerate(
-            sonuclar[baslangic:baslangic + 3]
-        ):
+        kartlari_goster(
 
-            tarif = sonuc["tarif"]
+            list(
+                st.session_state.favoriler.values()
+            ),
 
-            uyum = sonuc["uyum"]
+            "favori"
+        )
 
-            with kolonlar[j]:
 
-                with st.container(border=True):
+# ALISVERIS LISTESI SAYFASI
 
-                    if baslangic == 0 and j == 0:
+with alisveris:
 
-                        st.caption("⭐ EN İYİ EŞLEŞME")
+    st.title("Alışveriş Listem")
 
-                    st.subheader(
-                        tarif.get("title") or "Yemek Tarifi"
-                    )
-
-                    st.caption(
-                        "🍽️ " + str(
-                            tarif.get("category")
-                            or "Yemek Tarifi"
-                        )
-                    )
-
-                    st.metric(
-                        "Malzeme Uyumu",
-                        f"%{uyum * 100:.0f}"
-                    )
-
-                    st.progress(float(uyum))
-
-                    st.write(
-                        f"✅ {len(sonuc['mevcut'])} "
-                        "eşleşen malzeme"
-                    )
-
-                    st.write(
-                        f"🛒 {len(sonuc['eksik'])} "
-                        "eksik malzeme"
-                    )
-
-                    with st.expander(
-                        "🥑 Malzemeleri İncele"
-                    ):
-
-                        st.markdown(
-                            "**Mutfağında bulunanlar**"
-                        )
-
-                        if sonuc["mevcut"]:
-
-                            for m in sonuc["mevcut"]:
-
-                                st.write("✅ " + str(m))
-
-                        else:
-
-                            st.write(
-                                "Eşleşen malzeme bulunamadı."
-                            )
-
-                        st.markdown(
-                            "**Eksik malzemeler**"
-                        )
-
-                        if sonuc["eksik"]:
-
-                            for m in sonuc["eksik"]:
-
-                                st.write("🛒 " + str(m))
-
-                        else:
-
-                            st.success(
-                                "Tüm malzeme isimleri eşleşti!"
-                            )
-
-                    with st.expander(
-                        "📋 Tüm Malzemeler"
-                    ):
-
-                        for m in tarif.get("ingredients") or []:
-
-                            st.write("• " + str(m))
-
-                    with st.expander(
-                        "👩‍🍳 Tarifi Gör"
-                    ):
-
-                        adimlar = tarif.get(
-                            "instructions"
-                        ) or []
-
-                        if isinstance(adimlar, list):
-
-                            for no, adim in enumerate(
-                                adimlar, start=1
-                            ):
-
-                                st.write(f"{no}. {adim}")
-
-                        elif adimlar:
-
-                            st.write(adimlar)
-
-                        else:
-
-                            st.info(
-                                "Hazırlanış bilgisi bulunamadı."
-                            )
-
-                    with st.expander(
-                        "✨ Neden Bu Tarif?"
-                    ):
-
-                        st.write(
-                            f"Bu tarif, yemek tercihin ve "
-                            f"malzeme eşleşmen dikkate "
-                            f"alınarak önerildi. Tarifin "
-                            f"malzemelerinin "
-                            f"%{uyum * 100:.0f} kadarı "
-                            f"elindeki malzemelerle eşleşiyor."
-                        )
-
-                        st.caption(
-                            "Kural tabanlı öneri açıklaması."
-                        )
-
-                    st.caption(
-                        f"Hibrit arama puanı: "
-                        f"{sonuc['puan']:.3f}"
-                    )
-
-    st.caption(
-        "Malzeme uyumu isim eşleşmesine dayanır. "
-        "Malzeme miktarları kontrol edilmez."
+    st.write(
+        "Bir sonraki alışverişinde ihtiyacın "
+        "olan malzemeler."
     )
 
+    if not st.session_state.alisveris:
 
-# OZELLIK KARTLARI
+        st.info(
+            "Alışveriş listen henüz boş."
+        )
 
-st.divider()
+    else:
 
-st.html("""
-<div class="section-title">
-Akıllı mutfağın avantajları
-</div>
-""")
+        secilenler = []
 
-c1, c2, c3 = st.columns(3)
+        for m in st.session_state.alisveris:
 
-with c1:
+            if st.checkbox(
 
-    st.html("""
-    <div class="feature">
-    <div class="feature-icon">🥗</div>
-    <h3>Sana Özel Tarifler</h3>
-    <p>
-    Malzemelerine ve yemek tercihlerine
-    uygun akıllı öneriler.
-    </p>
-    </div>
-    """)
+                str(m),
 
-with c2:
+                key=f"alisveris_{m}"
 
-    st.html("""
-    <div class="feature">
-    <div class="feature-icon">🌱</div>
-    <h3>Daha Az İsraf</h3>
-    <p>
-    Evindeki malzemeleri değerlendir,
-    sürdürülebilir bir mutfak oluştur.
-    </p>
-    </div>
-    """)
+            ):
 
-with c3:
+                secilenler.append(m)
 
-    st.html("""
-    <div class="feature">
-    <div class="feature-icon">✨</div>
-    <h3>Akıllı Teknoloji</h3>
-    <p>
-    Anlamsal arama ve hibrit bilgi erişimi
-    ile yeni lezzetler keşfet.
-    </p>
-    </div>
-    """)
+        c1, c2, c3 = st.columns(3)
+
+        if c1.button("Seçilenleri Kaldır"):
+
+            st.session_state.alisveris = [
+
+                m for m in st.session_state.alisveris
+
+                if m not in secilenler
+
+            ]
+
+            st.rerun()
+
+        c2.download_button(
+
+            "📥 Listeyi İndir",
+
+            data="\n".join(
+                map(str, st.session_state.alisveris)
+            ),
+
+            file_name="alisveris_listem.txt",
+
+            mime="text/plain"
+        )
+
+        if c3.button("Listeyi Temizle"):
+
+            st.session_state.alisveris = []
+
+            st.rerun()
+
+
+# SISTEM ANALIZI SAYFASI
+
+with analiz:
+
+    st.title("Bilgi Erişim Sistemi")
+
+    st.write(
+        "RecipeMind-AI arama motorunun "
+        "teknik mimarisi ve çalışma prensibi."
+    )
+
+    st.header("Kullanılan Teknolojiler")
+
+    st.table([
+
+        {
+            "Teknoloji": "BM25",
+            "Görevi": "Kelime tabanlı arama"
+        },
+
+        {
+            "Teknoloji": "Sentence Transformers",
+            "Görevi": "Anlamsal arama"
+        },
+
+        {
+            "Teknoloji": "FAISS",
+            "Görevi": "Vektör benzerlik araması"
+        },
+
+        {
+            "Teknoloji": "RRF",
+            "Görevi": "Arama sıralamalarını birleştirme"
+        },
+
+        {
+            "Teknoloji": "Ingredient Matching",
+            "Görevi": "Malzeme eşleştirme"
+        },
+
+        {
+            "Teknoloji": "Streamlit",
+            "Görevi": "Web arayüzü"
+        }
+
+    ])
+
+    st.header("Sistem Mimarisi")
+
+    st.code("""
+Kullanıcı Sorgusu
+        |
+        v
+BM25 + Anlamsal Arama (FAISS)
+        |
+        v
+Reciprocal Rank Fusion (RRF)
+        |
+        v
+Malzeme Eşleştirme
+        |
+        v
+Hibrit Puanlama
+        |
+        v
+Kişiselleştirilmiş Tarif Önerileri
+    """, language="text")
+
+    st.header("Hibrit Arama Ağırlıkları")
+
+    st.bar_chart({
+
+        "Ağırlık (%)": {
+
+            "RRF": 60,
+
+            "Malzeme Uyumu": 40
+
+        }
+
+    })
+
+    st.caption(
+        "Bu değerler algoritma ağırlıklarıdır. "
+        "Doğruluk veya başarı oranı değildir."
+    )
+
+    if "arama_suresi" in st.session_state:
+
+        st.metric(
+
+            "Son Arama Süresi",
+
+            f"{st.session_state.arama_suresi:.3f} saniye"
+        )
+
+    if st.button("Veri Seti Bilgilerini Göster"):
+
+        try:
+
+            sistem = motoru_yukle()
+
+            tarifler, model, index, bm25 = sistem
+
+            c1, c2, c3 = st.columns(3)
+
+            c1.metric(
+                "Toplam Tarif",
+                len(tarifler)
+            )
+
+            c2.metric(
+                "Vektör Boyutu",
+                index.d
+            )
+
+            c3.metric(
+                "İndekslenen Tarif",
+                index.ntotal
+            )
+
+        except Exception as hata:
+
+            st.error(str(hata))
+
+    st.info(
+        "Precision@K, Recall@K ve nDCG "
+        "değerlendirmeleri henüz yapılmadı."
+    )
 
 
 # ALT BILGI
@@ -586,10 +1200,16 @@ st.divider()
 
 st.html("""
 <div class="footer">
+
 <strong>🌿 RecipeMind AI</strong>
+
 <br><br>
+
 İyi yemek. Akıllı seçimler. Daha az israf.
+
 <br><br>
+
 © 2026 RecipeMind-AI
+
 </div>
 """)

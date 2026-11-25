@@ -3,8 +3,9 @@ import base64
 import time
 import re
 import html
-from pathlib import Path
 
+from pathlib import Path
+from PIL import Image, ImageOps
 from search_engine import sistemi_yukle, tarif_ara
 
 
@@ -39,7 +40,7 @@ if "sonuclar" not in st.session_state:
     st.session_state.sonuclar = []
 
 
-# FOTOGRAF
+# ANA SAYFA FOTOGRAFI
 
 foto = BASE / "assets" / "hero.jpg"
 
@@ -203,12 +204,17 @@ h1, h2, h3, h4 {
 [data-testid="stVerticalBlockBorderWrapper"] {
     background: white;
     border-radius: 18px;
-    box-shadow: 0 5px 18px #243D3009;
+    box-shadow: 0 5px 18px #243D3010;
 }
 
 [data-testid="stExpander"] {
     background: #FAF8F3;
     border-radius: 10px;
+}
+
+[data-testid="stImage"] img {
+    border-radius: 14px;
+    object-fit: cover;
 }
 
 .recipe-banner {
@@ -217,9 +223,7 @@ h1, h2, h3, h4 {
     background: linear-gradient(
         135deg, #DCE5D5, #F0EBDD
     );
-    min-height: 110px;
     text-align: center;
-    margin-bottom: 10px;
 }
 
 .recipe-icon {
@@ -331,6 +335,61 @@ h1, h2, h3, h4 {
 """)
 
 
+# KATEGORI FOTOGRAFLARI
+
+def kategori_fotografi(kategori):
+
+    kategori = str(kategori).replace(
+        "I", "ı"
+    ).replace("İ", "i").lower()
+
+    if "kahvalt" in kategori:
+        dosya = "breakfast.jpg"
+
+    elif "tatlı" in kategori:
+        dosya = "dessert.jpg"
+
+    elif "çorba" in kategori:
+        dosya = "soup.jpg"
+
+    elif "salata" in kategori:
+        dosya = "salad.jpg"
+
+    elif "makarna" in kategori:
+        dosya = "pasta.jpg"
+
+    elif "börek" in kategori:
+        dosya = "pastry.jpg"
+
+    elif "et yemek" in kategori:
+        dosya = "meat.jpg"
+
+    else:
+        dosya = "default.jpg"
+
+    return BASE / "assets" / "recipes" / dosya
+
+
+# FOTOGRAFLARI ESIT BOYUTLANDIRMA
+
+@st.cache_data
+def fotograf_hazirla(dosya):
+
+    with Image.open(dosya) as resim:
+
+        resim = ImageOps.exif_transpose(resim)
+
+        resim = resim.convert("RGB")
+
+        resim = ImageOps.fit(
+            resim,
+            (800, 480),
+            method=Image.Resampling.LANCZOS
+        )
+
+        return resim
+
+
 # KATEGORI SIMGELERI
 
 def kategori_simgesi(kategori):
@@ -352,14 +411,11 @@ def kategori_simgesi(kategori):
     if "makarna" in kategori:
         return "🍝"
 
-    if "et" in kategori:
-        return "🍖"
-
     if "börek" in kategori:
         return "🥐"
 
-    if "içecek" in kategori:
-        return "🥤"
+    if "et yemek" in kategori:
+        return "🍖"
 
     return "🍽️"
 
@@ -440,17 +496,57 @@ def tarif_karti(sonuc, alan):
 
     with st.container(border=True):
 
+        fotograf = kategori_fotografi(kategori)
+
+        if not fotograf.exists():
+
+            fotograf = (
+                BASE / "assets" / "recipes" / "default.jpg"
+            )
+
+        fotograf_gosterildi = False
+
+        if fotograf.exists():
+
+            try:
+
+                resim = fotograf_hazirla(
+                    str(fotograf)
+                )
+
+                st.image(
+                    resim,
+                    use_container_width=True
+                )
+
+                st.caption(
+                    "Temsili kategori görseli"
+                )
+
+                fotograf_gosterildi = True
+
+            except Exception:
+
+                fotograf_gosterildi = False
+
+        if not fotograf_gosterildi:
+
+            st.html(f"""
+            <div class="recipe-banner">
+            <div class="recipe-icon">{simge}</div>
+            </div>
+            """)
+
         st.html(f"""
-        <div class="recipe-banner">
-        <div class="recipe-icon">{simge}</div>
         <div class="recipe-category">
         {html.escape(kategori)}
-        </div>
         </div>
         """)
 
         st.html(f"""
-        <div class="recipe-title">{baslik}</div>
+        <div class="recipe-title">
+        {baslik}
+        </div>
         """)
 
         sure = sure_hesapla(
@@ -495,7 +591,7 @@ def tarif_karti(sonuc, alan):
             f"🛒 {len(sonuc['eksik'])} eksik malzeme"
         )
 
-        if yuzde == 100:
+        if uyum == 1:
 
             st.success(
                 "Tüm malzeme isimleri eşleşti!"
@@ -512,6 +608,7 @@ def tarif_karti(sonuc, alan):
             else "🤍 Favorilere Ekle",
 
             key=f"{alan}_favori_{tarif_id}",
+
             use_container_width=True
 
         ):
@@ -631,8 +728,8 @@ def tarif_karti(sonuc, alan):
             st.write(
                 f"Bu tarif, yemek tercihin ve "
                 f"malzeme eşleşmen dikkate alınarak "
-                f"önerildi. Malzeme isimlerinin "
-                f"%{yuzde} kadarı eşleşiyor."
+                f"önerildi. Tarifin malzemelerinin "
+                f"%{yuzde} kadarı isim olarak eşleşiyor."
             )
 
             st.caption(
@@ -649,7 +746,9 @@ def tarif_karti(sonuc, alan):
 
 def kartlari_goster(sonuclar, alan):
 
-    for baslangic in range(0, len(sonuclar), 3):
+    for baslangic in range(
+        0, len(sonuclar), 3
+    ):
 
         kolonlar = st.columns(3)
 
@@ -914,7 +1013,8 @@ with kesfet:
 
         st.caption(
             "Malzeme uyumu isim eşleşmesine dayanır. "
-            "Malzeme miktarları kontrol edilmez."
+            "Malzeme miktarları kontrol edilmez. "
+            "Yemek fotoğrafları temsilidir."
         )
 
     st.divider()

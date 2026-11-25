@@ -4,6 +4,7 @@ import time
 import re
 import html
 import json
+from performance_dashboard import performans_paneli
 
 from pathlib import Path
 from PIL import Image, ImageOps
@@ -1481,11 +1482,6 @@ Yapay Zekâ Destekli Tarif Açıklaması
 
             st.error(str(hata))
 
-    st.info(
-        "Precision@K, Recall@K ve nDCG "
-        "değerlendirmeleri henüz yapılmadı."
-    )
-
 
 # ALT BILGI
 
@@ -1506,3 +1502,6 @@ st.html("""
 
 </div>
 """)
+with analiz:
+    st.divider()
+    performans_paneli()

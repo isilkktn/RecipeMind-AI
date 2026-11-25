@@ -1,0 +1,42 @@
+[
+    {
+        "yontem": "BM25",
+        "test_sayisi": 10,
+        "precision_at_5": 0.84,
+        "recall_at_5": 0.4705239205239205,
+        "f1_at_5": 0.5699083381358923,
+        "ndcg_at_5": 0.8174674472255913,
+        "malzeme_uyumu": 0.23176917526917526,
+        "arama_suresi_ms": 10.08207998238504
+    },
+    {
+        "yontem": "Semantic Search",
+        "test_sayisi": 10,
+        "precision_at_5": 0.62,
+        "recall_at_5": 0.2655899655899656,
+        "f1_at_5": 0.36933113755869174,
+        "ndcg_at_5": 0.4645393291600268,
+        "malzeme_uyumu": 0.16802453102453102,
+        "arama_suresi_ms": 21.47686001844704
+    },
+    {
+        "yontem": "RRF",
+        "test_sayisi": 10,
+        "precision_at_5": 0.8200000000000001,
+        "recall_at_5": 0.3761960261960262,
+        "f1_at_5": 0.5095813285441768,
+        "ndcg_at_5": 0.6766806232644234,
+        "malzeme_uyumu": 0.25104545454545457,
+        "arama_suresi_ms": 31.642880011349916
+    },
+    {
+        "yontem": "RecipeMind Hybrid",
+        "test_sayisi": 10,
+        "precision_at_5": 0.78,
+        "recall_at_5": 0.3607919857919858,
+        "f1_at_5": 0.4871023369475382,
+        "ndcg_at_5": 0.7240795976269079,
+        "malzeme_uyumu": 0.39236868686868687,
+        "arama_suresi_ms": 35.09800003375858
+    }
+]

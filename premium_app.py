@@ -1,4 +1,8 @@
 import streamlit as st
+
+import os
+BULUT_MODU = os.environ.get("RECIPEMIND_CLOUD") == "1"
+
 import base64
 import time
 import re
@@ -518,7 +522,7 @@ def yapay_zeka_asistani(sonuc, alan):
 
     if st.button(
 
-        "✨ Yapay Zekâ Asistanına Sor",
+        "✨ Tarif Açıklamasını Göster" if BULUT_MODU else "✨ Yapay Zekâ Asistanına Sor",
 
         key=f"{alan}_rag_{tarif_id}",
 
@@ -580,7 +584,7 @@ def yapay_zeka_asistani(sonuc, alan):
         """)
 
         st.caption(
-            "Qwen 2.5 · RAG destekli açıklama"
+            "Kural tabanlı açıklama" if BULUT_MODU else "Qwen 2.5 · RAG destekli açıklama"
         )
 
         st.caption(
@@ -914,7 +918,13 @@ st.html("""
 AKILLI MUTFAK • SÜRDÜRÜLEBİLİR YAŞAM
 </div>
 """)
-
+if BULUT_MODU:
+    st.info(
+        "RecipeMind AI - Çevrimiçi Demo Sürümü. "
+        "Hibrit arama ve malzeme eşleştirme aktiftir. "
+        "Qwen tabanlı RAG asistanı yerine bu sürümde "
+        "kural tabanlı tarif açıklamaları kullanılmaktadır."
+    )
 
 # UST NAVIGASYON MENUSU
 
@@ -1353,7 +1363,7 @@ with analiz:
         },
 
         {
-            "Teknoloji": "Qwen 2.5 - 1.5B Instruct",
+            "Teknoloji": "Kural tabanlı açıklama" if BULUT_MODU else "Qwen 2.5 - 1.5B Instruct",
             "Görevi": "Yapay zekâ açıklaması üretme"
         },
 
@@ -1427,7 +1437,7 @@ Yapay Zekâ Destekli Tarif Açıklaması
             f"{st.session_state.arama_suresi:.3f} saniye"
         )
 
-    st.header("RAG Yapay Zekâ Asistanı")
+    st.header("Tarif Açıklama Sistemi" if BULUT_MODU else "RAG Yapay Zekâ Asistanı")
 
     st.write(
         "Sistem, hibrit arama sonucunda getirilen "
@@ -1439,9 +1449,9 @@ Yapay Zekâ Destekli Tarif Açıklaması
     c1, c2 = st.columns(2)
 
     c1.metric(
-        "Dil Modeli",
-        "Qwen 2.5"
-    )
+    "Açıklama Yöntemi",
+    "Kural tabanlı" if BULUT_MODU else "Qwen 2.5"
+)
 
     c2.metric(
         "Üretilen Kayıtlı Açıklama",

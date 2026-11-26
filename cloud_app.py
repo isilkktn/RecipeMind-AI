@@ -35,8 +35,8 @@ def bulut_kurulumu():
         hf_hub_download(
             repo_id=DATASET_ID,
             repo_type="dataset",
-            filename="test.jsonl",
-            local_dir=str(DATA)
+            filename="data/test.jsonl",
+            local_dir=str(BASE)
         )
 
     with open(veri_yolu, encoding="utf-8") as dosya:

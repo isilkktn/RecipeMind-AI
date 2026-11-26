@@ -471,12 +471,12 @@ Temel sistem geliştirmesi tamamlanmıştır.
 ## 🎓 Akademik Bilgiler
 
 - Üniversite: İstinye Üniversitesi
-- Bölüm: Yönetim Bilişim Sistemleri
+- Bölüm: Yazılım Mühendisliği
 - Ders: Akıllı Bilgi Erişim Sistemleri ve Metin Analitiği
 - Proje Türü: Bireysel Proje
 - Proje Kategorisi: Anlamsal Arama ve Bağlantı Analizi
 - Geliştirici: Ferda Işıl Kökten
-- Yıl: 2026
+- Numara: 2609111042
 
 ---
 

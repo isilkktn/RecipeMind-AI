@@ -1,0 +1,22 @@
+[
+    {
+        "yontem": "BM25",
+        "test_sayisi": 10,
+        "ndcg_at_10": 0.760301635120674
+    },
+    {
+        "yontem": "Semantic Search",
+        "test_sayisi": 10,
+        "ndcg_at_10": 0.48919586738674337
+    },
+    {
+        "yontem": "RRF",
+        "test_sayisi": 10,
+        "ndcg_at_10": 0.6689016055639252
+    },
+    {
+        "yontem": "RecipeMind Hybrid",
+        "test_sayisi": 10,
+        "ndcg_at_10": 0.7528191887055197
+    }
+]

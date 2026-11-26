@@ -1,0 +1,11 @@
+streamlit
+pandas
+numpy
+torch
+sentence-transformers
+transformers
+faiss-cpu
+rank-bm25
+Pillow
+altair
+huggingface_hub

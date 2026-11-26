@@ -20,12 +20,10 @@ def performans_paneli():
     dosya_yolu = BASE / "performance_metrics.json"
 
     if not dosya_yolu.exists():
-
         st.warning("Performans sonuçları bulunamadı.")
         return
 
     with open(dosya_yolu, encoding="utf-8") as dosya:
-
         veriler = json.load(dosya)
 
     df = pd.DataFrame(veriler)
@@ -39,19 +37,14 @@ def performans_paneli():
     if top10_hazir:
 
         with open(top10_yolu, encoding="utf-8") as dosya:
-
             top10_veriler = json.load(dosya)
 
         top10_df = pd.DataFrame(top10_veriler)
 
         df = df.merge(
-
             top10_df[["yontem", "ndcg_at_10"]],
-
             on="yontem",
-
             how="left"
-
         )
 
     hibrit = df[
@@ -104,12 +97,10 @@ def performans_paneli():
     tablo = df.copy()
 
     for sutun in [
-
         "precision_at_5",
         "recall_at_5",
         "f1_at_5",
         "malzeme_uyumu"
-
     ]:
 
         tablo[sutun] = tablo[sutun] * 100
@@ -129,25 +120,28 @@ def performans_paneli():
     })
 
     st.dataframe(
-
         tablo.round(4),
-
         hide_index=True,
-
         width="stretch"
-
     )
 
     # GRAFIK FONKSIYONU
 
-    def grafik(sutun, baslik, yuzde=False):
+    def grafik(
+        sutun,
+        baslik,
+        yuzde=False,
+        veri=None,
+        vurgulanan="RecipeMind Hybrid"
+    ):
 
-        grafik_df = df[
+        kaynak = df if veri is None else veri
+
+        grafik_df = kaynak[
             ["yontem", sutun]
         ].copy()
 
         if yuzde:
-
             grafik_df[sutun] *= 100
 
         grafik_df = grafik_df.rename(
@@ -176,35 +170,22 @@ def performans_paneli():
         ).encode(
 
             x=alt.X(
-
                 "yontem:N",
-
                 title="Algoritma",
-
                 sort=None,
-
                 axis=alt.Axis(labelAngle=-15)
-
             ),
 
             y=alt.Y(
-
                 "deger:Q",
-
                 title=baslik,
-
                 scale=olcek
-
             ),
 
             color=alt.condition(
-
-                alt.datum.yontem == "RecipeMind Hybrid",
-
+                alt.datum.yontem == vurgulanan,
                 alt.value("#38583F"),
-
                 alt.value("#B9C8B5")
-
             ),
 
             tooltip=[
@@ -222,18 +203,11 @@ def performans_paneli():
 
             ]
 
-        ).properties(
-
-            height=280
-
-        )
+        ).properties(height=280)
 
         st.altair_chart(
-
             chart,
-
             width="stretch"
-
         )
 
     # BILGI ERISIMI METRIKLERI
@@ -301,7 +275,7 @@ def performans_paneli():
         st.caption(
             "İlk 10 sonucun ilgililik derecesi ve "
             "sıralama kalitesi değerlendirilmiştir. "
-            "İdeal sıralama, değerlendirme havuzuna dayanır."
+            "İdeal sıralama değerlendirme havuzuna dayanır."
         )
 
     else:
@@ -355,21 +329,15 @@ def performans_paneli():
     a1, a2 = st.columns(2)
 
     a1.metric(
-
         "BM25'e Göre Göreceli Artış",
-
         f"%{bm25_artis:.1f}"
         if bm25_artis is not None else "—"
-
     )
 
     a2.metric(
-
         "RRF'ye Göre Göreceli Artış",
-
         f"%{rrf_artis:.1f}"
         if rrf_artis is not None else "—"
-
     )
 
     # ARAMA SURESI
@@ -379,22 +347,251 @@ def performans_paneli():
     st.subheader("Arama Süresi Karşılaştırması")
 
     grafik(
-
         "arama_suresi_ms",
-
         "Süre (ms)"
-
     )
 
     st.caption(
-        "Arama süreleri Top-5 deneyinden alınmıştır."
+        "Arama süreleri genel Top-5 deneyinden alınmıştır."
     )
+
+    # ANLAMSAL SORGU DENEYI
+
+    st.divider()
+
+    st.header("Anlamsal Sorgu Deneyi")
+
+    st.markdown(
+        "Bu deneyde doğal dilde ifade edilen 10 farklı "
+        "kullanıcı sorgusu üzerinden BM25 ve anlamsal "
+        "arama yöntemleri karşılaştırılmıştır."
+    )
+
+    semantic_yolu = (
+        BASE / "semantic_performance_metrics.json"
+    )
+
+    semantic_hazir = semantic_yolu.exists()
+
+    if semantic_hazir:
+
+        with open(
+            semantic_yolu,
+            encoding="utf-8"
+        ) as dosya:
+
+            semantic_veriler = json.load(dosya)
+
+        semantic_df = pd.DataFrame(semantic_veriler)
+
+        semantic_bm25 = semantic_df[
+            semantic_df["yontem"] == "BM25"
+        ].iloc[0]
+
+        semantic_model = semantic_df[
+            semantic_df["yontem"] == "Semantic Search"
+        ].iloc[0]
+
+        # ANLAMSAL DENEY OZETI
+
+        s1, s2, s3, s4 = st.columns(4)
+
+        s1.metric(
+            "Test Sorgusu",
+            int(semantic_model["test_sayisi"])
+        )
+
+        s2.metric(
+            "Anlamsal Precision@5",
+            f"%{semantic_model['precision_at_5'] * 100:.0f}"
+        )
+
+        s3.metric(
+            "Anlamsal nDCG@5",
+            f"{semantic_model['ndcg_at_5']:.4f}"
+        )
+
+        s4.metric(
+            "Anlamsal Arama Süresi",
+            f"{semantic_model['arama_suresi_ms']:.2f} ms"
+        )
+
+        # ANLAMSAL DENEY TABLOSU
+
+        st.subheader(
+            "BM25 ve Anlamsal Arama Karşılaştırması"
+        )
+
+        semantic_tablo = semantic_df.copy()
+
+        semantic_tablo["precision_at_5"] *= 100
+
+        semantic_tablo = semantic_tablo.rename(
+            columns={
+
+                "yontem": "Algoritma",
+                "test_sayisi": "Test Sayısı",
+                "precision_at_5": "Precision@5 (%)",
+                "ndcg_at_5": "nDCG@5",
+                "arama_suresi_ms": "Arama Süresi (ms)",
+                "sure_olculen_sorgu_sayisi":
+                    "Süresi Ölçülen Sorgu Sayısı"
+
+            }
+        )
+
+        st.dataframe(
+            semantic_tablo.round(4),
+            hide_index=True,
+            width="stretch"
+        )
+
+        # ANLAMSAL DENEY GRAFIKLERI
+
+        sg1, sg2 = st.columns(2)
+
+        with sg1:
+
+            st.markdown("**Precision@5**")
+
+            grafik(
+                "precision_at_5",
+                "Precision (%)",
+                True,
+                veri=semantic_df,
+                vurgulanan="Semantic Search"
+            )
+
+        with sg2:
+
+            st.markdown("**nDCG@5**")
+
+            grafik(
+                "ndcg_at_5",
+                "nDCG@5",
+                veri=semantic_df,
+                vurgulanan="Semantic Search"
+            )
+
+        st.markdown("**Arama Süresi Karşılaştırması**")
+
+        grafik(
+            "arama_suresi_ms",
+            "Süre (ms)",
+            veri=semantic_df,
+            vurgulanan="Semantic Search"
+        )
+
+        # GORECELI PERFORMANS ARTISI
+
+        precision_farki = (
+
+            semantic_model["precision_at_5"]
+            - semantic_bm25["precision_at_5"]
+
+        ) * 100
+
+        ndcg_artisi = (
+
+            (
+                semantic_model["ndcg_at_5"]
+                - semantic_bm25["ndcg_at_5"]
+            )
+
+            / semantic_bm25["ndcg_at_5"]
+
+        ) * 100 if semantic_bm25["ndcg_at_5"] else None
+
+        sa1, sa2 = st.columns(2)
+
+        sa1.metric(
+            "Precision Farkı",
+            f"{precision_farki:+.1f} yüzde puan"
+        )
+
+        sa2.metric(
+            "nDCG Göreceli Değişimi",
+            f"%{ndcg_artisi:.1f}"
+            if ndcg_artisi is not None else "—"
+        )
+
+        # ANLAMSAL DENEY BULGULARI
+
+        st.subheader("Anlamsal Arama Bulguları")
+
+        if (
+            semantic_model["precision_at_5"]
+            > semantic_bm25["precision_at_5"]
+            and semantic_model["ndcg_at_5"]
+            > semantic_bm25["ndcg_at_5"]
+        ):
+
+            st.markdown(
+                "Bu deneyde anlamsal arama yöntemi "
+                "Precision@5 ve nDCG@5 metriklerinde "
+                "BM25 yönteminden daha yüksek sonuç "
+                "elde etmiştir."
+            )
+
+        st.markdown("""
+
+        **Olumlu örnek:**
+
+        Hastayken içimi ısıtacak bir yemek sorgusunda
+        anlamsal arama, çorba türünde tarifler
+        getirebilmiştir.
+
+        **Olumsuz örnek:**
+
+        Et içermeyen doyurucu yemek sorgusunda
+        anlamsal arama etli tarifler de önermiştir.
+
+        Bu durum modelin olumsuz ifadeleri ve
+        kesin malzeme kısıtlamalarını anlamakta
+        zorlanabildiğini göstermektedir.
+
+        """)
+
+        with st.expander(
+            "Anlamsal Deney Yöntemi ve Sınırlamalar"
+        ):
+
+            st.markdown("""
+
+            - Test sorgusu sayısı: 10
+            - Karşılaştırılan yöntem sayısı: 2
+            - Değerlendirme derinliği: Top-5
+            - Toplam arama sonuç kaydı: 96
+            - Tekrarsız sorgu-tarif eşleşmesi: 92
+            - İlgililik ölçeği: 0, 1 ve 2
+            - İlgililik etiketleri yapay zekâ desteklidir.
+            - Bağımsız insan değerlendirmesi yapılmamıştır.
+            - Precision@5 hesabında eksik sonuçlar
+              ilgili kabul edilmemiştir.
+            - nDCG ideal sıralaması değerlendirme
+              havuzuna dayanır.
+            - Sorguların tamamının kelime eşleşmesinden
+              bağımsız olduğu doğrulanmamıştır.
+            - Sorgularda Türkçe karakterler yerine
+              ASCII karakterler kullanılmıştır.
+            - Hiç sonuç getirilmeyen sorguların süreleri
+              mevcut sonuç kayıtlarından hesaplanamaz.
+            - Deney sonuçları bütün sorgu türlerine
+              genellenemez.
+
+            """)
+
+    else:
+
+        st.warning(
+            "Anlamsal arama deney sonuçları bulunamadı."
+        )
 
     # AKADEMIK DEGERLENDIRME
 
     st.divider()
 
-    st.subheader("Deneysel Bulgular")
+    st.subheader("Genel Deneysel Bulgular")
 
     st.markdown("""
 
@@ -403,7 +600,7 @@ def performans_paneli():
     yöntemiyle birleştirmekte ve malzeme uyumuna
     göre yeniden sıralamaktadır.
 
-    Deney sonuçlarında BM25 genel ilgililik
+    Genel arama deneyinde BM25 ilgililik
     metriklerinde daha başarılı olurken,
     RecipeMind Hybrid malzeme uyumu açısından
     en yüksek performansı göstermiştir.
@@ -418,31 +615,57 @@ def performans_paneli():
 
         st.markdown(f"""
 
-        **Top-10 değerlendirmesinde:**
+        **Top-10 değerlendirmesi:**
 
         - BM25 nDCG@10: {bm25['ndcg_at_10']:.4f}
         - RecipeMind Hybrid nDCG@10: {hibrit['ndcg_at_10']:.4f}
         - RRF nDCG@10: {rrf['ndcg_at_10']:.4f}
 
-        Mevcut deneyde RecipeMind Hybrid,
-        nDCG@10 metriğinde BM25'e yakın sonuç
-        elde etmiş ve RRF ile anlamsal aramayı
-        geride bırakmıştır.
+        RecipeMind Hybrid, mevcut deneyde nDCG@10
+        metriğinde BM25'e yakın bir sonuç elde
+        etmiştir.
+
+        """)
+
+    if semantic_hazir:
+
+        st.markdown(f"""
+
+        **Anlamsal sorgu değerlendirmesi:**
+
+        - BM25 Precision@5:
+          %{semantic_bm25['precision_at_5'] * 100:.0f}
+
+        - Semantic Search Precision@5:
+          %{semantic_model['precision_at_5'] * 100:.0f}
+
+        - BM25 nDCG@5:
+          {semantic_bm25['ndcg_at_5']:.4f}
+
+        - Semantic Search nDCG@5:
+          {semantic_model['ndcg_at_5']:.4f}
+
+        Genel arama ve anlamsal sorgu deneyleri,
+        farklı test sorguları üzerinden yapılmıştır.
+        Sonuçlar kendi deney kapsamlarında
+        değerlendirilmelidir.
 
         """)
 
     # DENEY SINIRLAMALARI
 
-    with st.expander("Deney Yöntemi ve Sınırlamalar"):
+    with st.expander("Genel Deney Yöntemi ve Sınırlamalar"):
 
         st.markdown("""
 
         - Veri seti: 10.499 yemek tarifi
-        - Test sorgusu sayısı: 10
-        - Karşılaştırılan algoritma sayısı: 4
+        - Genel deney: 10 test sorgusu
+        - Genel deneyde karşılaştırılan yöntem: 4
         - Değerlendirme derinliği: Top-5 ve Top-10
         - Top-5 deneyinde 200 arama sonuç kaydı
         - Top-10 deneyinde 400 arama sonuç kaydı
+        - Anlamsal sorgu deneyinde 10 ek test sorgusu
+        - Anlamsal deneyde karşılaştırılan yöntem: 2
         - İlgililik ölçeği: 0, 1 ve 2
         - İlgililik etiketleri yapay zekâ desteklidir.
         - Bağımsız insan değerlendirmesi yapılmamıştır.
@@ -452,10 +675,12 @@ def performans_paneli():
         - Malzeme miktarlarının yeterliliği ölçülmemiştir.
         - Arama süreleri model yükleme ve RAG yanıt
           üretim sürelerini kapsamamaktadır.
+        - Anlamsal sorgu deneyi yapılmıştır ancak
+          kesin eş anlamlılık ve sıfır kelime eşleşmesi
+          ayrı olarak doğrulanmamıştır.
         - Sonuçlar sınırlı sayıdaki test sorgusuna
           dayanmaktadır.
-        - Eş anlamlı ve kelime eşleşmeyen sorgular
-          için ayrı deney henüz yapılmamıştır.
+        - Gıda israfındaki gerçek azalma ölçülmemiştir.
 
         """)
 
@@ -465,13 +690,9 @@ def performans_paneli():
 if __name__ == "__main__":
 
     st.set_page_config(
-
         page_title="RecipeMind AI - Performans",
-
         page_icon="📊",
-
         layout="wide"
-
     )
 
     performans_paneli()

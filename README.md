@@ -4,7 +4,7 @@
 
 RecipeMind AI, kullanıcıların evlerinde bulunan malzemelere ve kişisel tercihlerine uygun yemek tariflerini bulmalarını sağlayan yapay zekâ destekli bir bilgi erişim sistemidir.
 
-## 🎯 Projenin Amacı
+##  Projenin Amacı
 
 Geleneksel yemek tarifi arama sistemlerinden farklı olarak RecipeMind AI, yalnızca anahtar kelimelere değil, kullanıcının doğal dilde ifade ettiği tercihlere ve mevcut malzemelerine de odaklanmaktadır.
 
@@ -17,11 +17,11 @@ Projenin temel amaçları:
 - Gıda israfının azaltılmasına katkı sağlamak.
 - Farklı bilgi erişim algoritmalarını karşılaştırmak.
 
-## 📚 Proje Kategorisi
+##  Proje Kategorisi
 
 Anlamsal Arama ve Bağlantı Analizi
 
-## ✨ Proje Özellikleri
+##  Proje Özellikleri
 
 - Doğal dilde yemek tarifi arama
 - 10.499 tariflik Türkçe veri seti
@@ -40,10 +40,11 @@ Anlamsal Arama ve Bağlantı Analizi
 - Alışveriş listesini indirme
 - RAG tabanlı yapay zekâ asistanı
 - Top-5 ve Top-10 performans değerlendirmesi
+- Ek anlamsal sorgu deneyi
 - Etkileşimli performans grafikleri
 - Kullanıcı dostu ve görsel web arayüzü
 
-## 🛠️ Kullanılan Teknolojiler
+##  Kullanılan Teknolojiler
 
 | Teknoloji | Kullanım Amacı |
 |---|---|
@@ -64,7 +65,7 @@ Anlamsal Arama ve Bağlantı Analizi
 | Hugging Face Hub | Veri ve model indirme |
 | Git ve GitHub | Sürüm kontrolü |
 
-## 📊 Veri Seti
+##  Veri Seti
 
 Projede Hugging Face platformunda bulunan Turkish Recipes 175K veri setinin test bölümü kullanılmıştır.
 
@@ -96,7 +97,7 @@ https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-
 
 https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct
 
-## 🧠 Sistem Mimarisi
+## Sistem Mimarisi
 
 ```mermaid
 flowchart TD
@@ -114,7 +115,7 @@ flowchart TD
     J --> K[Yapay Zekâ Açıklaması]
 ```
 
-## 🔍 Hibrit Arama Algoritması
+##  Hibrit Arama Algoritması
 
 RecipeMind Hybrid algoritması, BM25 ve anlamsal arama sonuçlarını RRF yöntemiyle birleştirmektedir.
 
@@ -151,7 +152,7 @@ Kullanıcının girdiği malzemeler tarifte bulunan malzemelerle karşılaştır
 
 Bu yöntem metinsel eşleşmeye dayanmaktadır; malzeme miktarlarının yeterliliğini garanti etmez.
 
-## 🤖 RAG Yapay Zekâ Asistanı
+##  RAG Yapay Zekâ Asistanı
 
 Retrieval-Augmented Generation (RAG), bilgi erişimi ve doğal dil üretimini birleştiren bir yaklaşımdır.
 
@@ -169,7 +170,7 @@ Dil modeli yerel olarak çalışmaktadır. Harici bir ücretli yapay zekâ API a
 
 Üretilen açıklamalar hatalı veya eksik bilgiler içerebilir. Tarifin orijinal bilgileri esas alınmalıdır.
 
-## 📈 Akademik Performans Değerlendirmesi
+##  Akademik Performans Değerlendirmesi
 
 Proje kapsamında dört farklı bilgi erişim yöntemi 10 test sorgusu üzerinden karşılaştırılmıştır.
 
@@ -226,7 +227,7 @@ Malzeme uyumu ve arama süresi değerleri Top-5 deneyine aittir.
 - **Malzeme uyumu:** Kullanıcının mevcut malzemeleri ile tarif malzeme satırlarının eşleşme oranı.
 - **Arama süresi:** Arama işleminin milisaniye cinsinden ölçülen süresi.
 
-## 🏆 Deneysel Bulgular
+##  Deneysel Bulgular
 
 RecipeMind Hybrid, dört yöntem arasında en yüksek ortalama malzeme uyumu oranını elde etmiştir.
 
@@ -254,7 +255,83 @@ BM25 genel ilgililik metriklerinde daha başarılı olurken RecipeMind Hybrid, m
 
 Elde edilen sonuçlar, geliştirilen hibrit yaklaşımın malzeme odaklı tarif önerme amacını desteklemektedir.
 
-## 📱 Uygulama Bölümleri
+##  Anlamsal Sorgu Deneyi
+
+Genel arama deneyinden ayrı olarak doğal dilde ifade edilen 10 ek sorgu üzerinde BM25 ve Semantic Search karşılaştırılmıştır. Deney, dolaylı ifadelerle tarif arama performansını incelemektedir.
+
+### Deney Tasarımı
+
+- Test sorgusu sayısı: 10
+- Karşılaştırılan yöntem sayısı: 2
+- Değerlendirme derinliği: Top-5
+- Maksimum sonuç kaydı: 100
+- Elde edilen sonuç kaydı: 96
+- Tekrarsız sorgu-tarif eşleşmesi: 92
+- İlgililik ölçeği: 0, 1 ve 2
+
+### Örnek Test Sorguları
+
+| Kullanıcı Sorgusu | Beklenen Tarif Türü |
+|---|---|
+| Sabah tüketebileceğim pratik yiyecekler | Kahvaltılık tarifler |
+| Et içermeyen doyurucu yemek | Vejetaryen yemekler |
+| Serinletici yaz lezzetleri | Soğuk tatlılar ve içecekler |
+| Bayat ekmeği değerlendirmek istiyorum | Bayat ekmek kullanılan tarifler |
+| Hafif bir akşam öğünü | Salata ve sebze yemekleri |
+| Hastayken içimi ısıtacak bir yemek | Sıcak çorbalar |
+| Çayın yanında ikram edilecek lezzetler | Kek, kurabiye ve börek |
+| Doğum gününde ikram edilecek tatlı | Pasta ve kutlama tatlıları |
+| Spor sonrası proteinli bir öğün | Protein kaynakları içeren yemekler |
+| Fırına ihtiyaç duymadan hazırlanan tatlı | Fırınsız tatlılar |
+
+Tabloda sorgular okunabilirlik amacıyla Türkçe karakterlerle gösterilmiştir. Deney kodunda ASCII karakterler kullanılmıştır.
+
+### Anlamsal Sorgu Deneyi Sonuçları
+
+| Metrik | BM25 | Semantic Search |
+|---|---:|---:|
+| Test Sayısı | 10 | 10 |
+| Precision@5 | %54 | **%58** |
+| nDCG@5 | 0.4522 | **0.5766** |
+| Ortalama Arama Süresi | **19.08 ms** | 23.38 ms |
+
+Her iki yöntem için 10 sorgunun arama süresi ölçülmüştür.
+
+Precision@5 hesabında getirilemeyen sonuçlar ilgili kabul edilmemiştir. İdeal nDCG sıralaması ortak değerlendirme havuzuna dayanmaktadır.
+
+### Anlamsal Arama Bulguları
+
+Anlamsal arama, bu deneyde Precision@5 ve nDCG@5 metriklerinde BM25 yönteminden daha yüksek sonuçlar elde etmiştir.
+
+- Precision@5 farkı: 4 yüzde puan.
+- BM25 nDCG@5: 0.4522.
+- Semantic Search nDCG@5: 0.5766.
+- BM25 arama süresi açısından daha hızlıdır.
+
+### Olumlu Örnek
+
+"Hastayken içimi ısıtacak bir yemek" sorgusunda anlamsal arama yöntemi çorba türündeki tarifleri getirebilmiştir.
+
+Bu sonuç, anlamsal aramanın bazı dolaylı kullanıcı ifadelerine uygun sonuçlar getirebildiğini göstermektedir.
+
+### Olumsuz Örnek
+
+"Et içermeyen doyurucu yemek" sorgusunda anlamsal arama yöntemi etli tarifler de önermiştir.
+
+Bu durum, modelin olumsuz ifadeleri ve kesin malzeme kısıtlamalarını anlamakta zorlanabildiğini göstermektedir.
+
+### Anlamsal Deneyin Sınırlamaları
+
+- İlgililik etiketleri yapay zekâ desteklidir.
+- Bağımsız insan değerlendirmesi yapılmamıştır.
+- Deney 10 test sorgusuyla sınırlıdır.
+- Deney sorgularında Türkçe karakterler yerine ASCII karakterler kullanılmıştır.
+- Sorguların tamamının doğrudan kelime eşleşmesinden bağımsız olduğu doğrulanmamıştır.
+- Kesin eş anlamlılık ve sıfır kelime eşleşmesi ayrı olarak ölçülmemiştir.
+
+Genel arama deneyi ve anlamsal sorgu deneyi farklı sorgu kümelerine dayanmaktadır. Sonuçlar kendi deney kapsamlarında değerlendirilmelidir.
+
+##  Uygulama Bölümleri
 
 ### 1. Tarif Keşfet
 
@@ -292,9 +369,12 @@ Sistemin teknik ve akademik özelliklerini kullanıcıya sunmaktadır.
 - nDCG@10 grafiği
 - Malzeme uyumu grafiği
 - Arama süresi grafiği
+- Anlamsal sorgu deneyi
+- BM25 ve anlamsal arama karşılaştırması
+- Anlamsal sorgu performans grafikleri
 - Deneysel bulgular ve sınırlamalar
 
-## 📁 Proje Dosyaları
+##  Proje Dosyaları
 
 | Dosya | Açıklama |
 |---|---|
@@ -315,6 +395,10 @@ Sistemin teknik ve akademik özelliklerini kullanıcıya sunmaktadır.
 | relevance_top10_labels.json | Top-10 ilgililik etiketleri |
 | performance_metrics.json | Top-5 performans sonuçları |
 | performance_top10_metrics.json | nDCG@10 performans sonuçları |
+| semantic_evaluation.py | Anlamsal sorgu arama testleri |
+| semantic_evaluation_metrics.py | Anlamsal sorgu performans hesaplamaları |
+| semantic_relevance_labels.json | Anlamsal sorgu ilgililik etiketleri |
+| semantic_performance_metrics.json | Anlamsal sorgu performans sonuçları |
 | performance_dashboard.py | Akademik analiz paneli |
 | setup_data.py | Otomatik veri ve model hazırlama |
 | requirements.txt | Gerekli Python kütüphaneleri |
@@ -322,7 +406,7 @@ Sistemin teknik ve akademik özelliklerini kullanıcıya sunmaktadır.
 | README.md | Proje dokümantasyonu |
 | .gitignore | Git dışında bırakılan dosyalar |
 
-## ⚙️ Kurulum
+##  Kurulum
 
 ### 1. Projeyi Bilgisayarınıza İndirin
 
@@ -366,7 +450,7 @@ Veri setinin kullanım koşulları Hugging Face üzerindeki kaynak sayfasından 
 
 Otomatik kurulum mevcut geliştirme ortamında başarıyla çalıştırılmıştır. Farklı bir bilgisayarda sıfırdan kurulum henüz doğrulanmamıştır.
 
-## 🚀 Uygulamayı Çalıştırma
+##  Uygulamayı Çalıştırma
 
 Gerekli veri ve model dosyaları hazırlandıktan sonra aşağıdaki komutu çalıştırın:
 
@@ -378,7 +462,7 @@ Tarayıcı üzerinden uygulamaya erişilebilir:
 
 http://localhost:8501
 
-## 🧪 Performans Testlerini Çalıştırma
+##  Performans Testlerini Çalıştırma
 
 ### Top-5 Arama Testleri
 
@@ -404,6 +488,20 @@ python evaluation_top10.py
 python evaluation_top10_metrics.py
 ```
 
+### Anlamsal Sorgu Deneyini Çalıştırma
+
+```bash
+python semantic_evaluation.py
+```
+
+### Anlamsal Sorgu Performans Metriklerini Hesaplama
+
+```bash
+python semantic_evaluation_metrics.py
+```
+
+Ham arama sonuçları test komutlarıyla yerel olarak oluşturulur.
+
 Performans hesaplamalarında mevcut ilgililik etiketleri kullanılmaktadır. Veri seti veya arama sonuçları değişirse ilgililik etiketlerinin yeniden kontrol edilmesi gerekir.
 
 ### Akademik Performans Panelini Bağımsız Çalıştırma
@@ -412,17 +510,20 @@ Performans hesaplamalarında mevcut ilgililik etiketleri kullanılmaktadır. Ver
 python -m streamlit run performance_dashboard.py
 ```
 
-## ⚠️ Deneysel Sınırlamalar
+##  Deneysel Sınırlamalar
 
-- Performans değerlendirmesi 10 test sorgusuyla sınırlıdır.
+- Genel performans değerlendirmesi 10 test sorgusuyla sınırlıdır.
+- Ek anlamsal sorgu değerlendirmesi 10 test sorgusuyla sınırlıdır.
 - İlgililik etiketleri yapay zekâ destekli oluşturulmuştur.
 - Bağımsız insan değerlendirmesi yapılmamıştır.
 - Recall değerleri bütün veri setine değil, değerlendirme havuzuna göre hesaplanmıştır.
 - nDCG için ideal sıralama değerlendirme havuzuna dayanmaktadır.
-- Eş anlamlı ve doğrudan kelime eşleşmesi olmayan sorgular için ayrı bir deney henüz gerçekleştirilmemiştir.
+- Anlamsal sorgu deneyi gerçekleştirilmiştir ancak kesin eş anlamlılık ve sıfır kelime eşleşmesi ayrı olarak doğrulanmamıştır.
+- Anlamsal deneyde Türkçe karakterler yerine ASCII karakterler kullanılmıştır.
 - Malzeme uyumu metinsel eşleşmeye dayanmaktadır.
 - Malzeme miktarlarının yeterliliği garanti edilmemektedir.
 - Malzeme eş anlamlılarının tanınması sınırlıdır.
+- Anlamsal arama modeli olumsuz ifadeleri ve kesin malzeme kısıtlamalarını anlamakta zorlanabilmektedir.
 - Tarif görselleri temsili kategori görselleridir.
 - Favoriler ve alışveriş listesi mevcut kullanıcı oturumu içerisinde saklanmaktadır.
 - Filtreleme işlemleri arama motorunun getirdiği aday tarifler üzerinde uygulanmaktadır.
@@ -431,12 +532,13 @@ python -m streamlit run performance_dashboard.py
 - Arama süreleri kullanılan bilgisayarın donanımına göre değişebilir.
 - Gıda israfındaki gerçek azalma deneysel olarak ölçülmemiştir.
 
-## 🔮 Gelecekte Yapılabilecek Geliştirmeler
+##  Gelecekte Yapılabilecek Geliştirmeler
 
 - Daha geniş kapsamlı performans değerlendirmesi
-- Eş anlamlı sorguların ayrı olarak değerlendirilmesi
+- Eş anlamlı sorguların kontrollü olarak değerlendirilmesi
 - Bağımsız kullanıcı değerlendirmesi
 - Malzeme eş anlamlılarının tanınması
+- Olumsuz sorgu ifadelerinin daha doğru işlenmesi
 - Besin değeri ve kalori hesaplama
 - Malzeme miktarlarının analiz edilmesi
 - Kullanıcı hesabı ve kalıcı favoriler
@@ -445,9 +547,9 @@ python -m streamlit run performance_dashboard.py
 - Gelişmiş Türkçe dil modeli kullanımı
 - Bulut ortamında yayınlama
 
-## 📌 Proje Durumu
+##  Proje Durumu
 
-Temel sistem geliştirmesi tamamlanmıştır.
+Temel sistem geliştirmesi ve planlanan performans deneyleri tamamlanmıştır.
 
 - [x] Veri seti hazırlama
 - [x] Anahtar kelime tabanlı arama
@@ -461,14 +563,16 @@ Temel sistem geliştirmesi tamamlanmıştır.
 - [x] Favoriler ve alışveriş listesi
 - [x] Top-5 akademik performans değerlendirmesi
 - [x] nDCG@10 değerlendirmesi
+- [x] Anlamsal sorgulara özel değerlendirme
+- [x] BM25 ve anlamsal arama karşılaştırması
 - [x] Performans grafikleri
 - [x] Otomatik kurulum dosyası
 - [x] Proje dokümantasyonu
-- [ ] Eş anlamlı sorgulara özel değerlendirme
+- [ ] Kesin eş anlamlılık ve sıfır kelime eşleşmesi doğrulaması
 - [ ] Bağımsız insan değerlendirmesi
 - [ ] Farklı bilgisayarda kurulum doğrulaması
 
-## 🎓 Akademik Bilgiler
+##  Akademik Bilgiler
 
 - Üniversite: İstinye Üniversitesi
 - Bölüm: Yazılım Mühendisliği

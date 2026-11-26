@@ -1,0 +1,18 @@
+[
+    {
+        "yontem": "BM25",
+        "test_sayisi": 10,
+        "precision_at_5": 0.54,
+        "ndcg_at_5": 0.45219505987999603,
+        "arama_suresi_ms": 19.081219999975474,
+        "sure_olculen_sorgu_sayisi": 10
+    },
+    {
+        "yontem": "Semantic Search",
+        "test_sayisi": 10,
+        "precision_at_5": 0.5800000000000001,
+        "ndcg_at_5": 0.5766460048966481,
+        "arama_suresi_ms": 23.381929999982276,
+        "sure_olculen_sorgu_sayisi": 10
+    }
+]

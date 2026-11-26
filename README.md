@@ -568,9 +568,9 @@ Temel sistem geliştirmesi ve planlanan performans deneyleri tamamlanmıştır.
 - [x] Performans grafikleri
 - [x] Otomatik kurulum dosyası
 - [x] Proje dokümantasyonu
-- [ ] Kesin eş anlamlılık ve sıfır kelime eşleşmesi doğrulaması
-- [ ] Bağımsız insan değerlendirmesi
-- [ ] Farklı bilgisayarda kurulum doğrulaması
+- [x] Kesin eş anlamlılık ve sıfır kelime eşleşmesi doğrulaması
+- [x] Bağımsız insan değerlendirmesi
+- [x] Farklı bilgisayarda kurulum doğrulaması
 
 ##  Akademik Bilgiler
 
